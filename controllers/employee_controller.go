@@ -9,6 +9,7 @@ import (
     //"encoding/json"
     "fmt"
    //"strconv"
+   "context"
 )
 
 // EmployeeController handles HTTP requests related to employees
@@ -98,6 +99,73 @@ func (ec *EmployeeController) GetEmployees(c *gin.Context) {
 
     // Render the table
     table.Render()
+}
+
+// AddEmployee handles POST request to add a new employee
+func (ec *EmployeeController) AddEmployee(c *gin.Context) {
+    var employee models.Employee
+    if err := c.ShouldBindJSON(&employee); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Add employee to MySQL database
+    if err := ec.employeeService.AddEmployee(&employee); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Cache employee data in Redis
+    if err := ec.redisService.CacheEmployee(employee); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"message": "Employee added successfully"})
+}
+
+// UpdateEmployee handles PUT request to update an existing employee
+func (ec *EmployeeController) UpdateEmployee(c *gin.Context) {
+    id := c.Param("id")
+    var employee models.Employee
+    if err := c.ShouldBindJSON(&employee); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Update employee in MySQL database
+    if err := ec.employeeService.UpdateEmployee(id, &employee); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Cache updated employee data in Redis
+    if err := ec.redisService.CacheEmployee(employee); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Employee updated successfully"})
+}
+
+// DeleteEmployee handles DELETE request to delete an employee
+func (ec *EmployeeController) DeleteEmployee(c *gin.Context) {
+    id := c.Param("id")
+
+    // Delete employee from MySQL database
+    if err := ec.employeeService.DeleteEmployee(id); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Remove employee data from Redis cache
+    ctx := context.Background()
+    if err := ec.redisService.RemoveEmployeeFromCache(ctx, id); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Employee deleted successfully"})
 }
 
 
@@ -216,41 +284,41 @@ func (ec *EmployeeController) GetEmployees(c *gin.Context) {
 //     table.Render()
 // }
 
-// AddEmployee handles POST request to add a new employee
-func (ec *EmployeeController) AddEmployee(c *gin.Context) {
-	var employee models.Employee
-	if err := c.ShouldBindJSON(&employee); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if err := ec.employeeService.AddEmployee(&employee); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"message": "Employee added successfully"})
-}
+// // AddEmployee handles POST request to add a new employee
+// func (ec *EmployeeController) AddEmployee(c *gin.Context) {
+// 	var employee models.Employee
+// 	if err := c.ShouldBindJSON(&employee); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	if err := ec.employeeService.AddEmployee(&employee); err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusCreated, gin.H{"message": "Employee added successfully"})
+// }
 
-// UpdateEmployee handles PUT request to update an existing employee
-func (ec *EmployeeController) UpdateEmployee(c *gin.Context) {
-	id := c.Param("id")
-	var employee models.Employee
-	if err := c.ShouldBindJSON(&employee); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if err := ec.employeeService.UpdateEmployee(id, &employee); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Employee updated successfully"})
-}
+// // UpdateEmployee handles PUT request to update an existing employee
+// func (ec *EmployeeController) UpdateEmployee(c *gin.Context) {
+// 	id := c.Param("id")
+// 	var employee models.Employee
+// 	if err := c.ShouldBindJSON(&employee); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	if err := ec.employeeService.UpdateEmployee(id, &employee); err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"message": "Employee updated successfully"})
+// }
 
-// DeleteEmployee handles DELETE request to delete an employee
-func (ec *EmployeeController) DeleteEmployee(c *gin.Context) {
-	id := c.Param("id")
-	if err := ec.employeeService.DeleteEmployee(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Employee deleted successfully"})
-}
+// // DeleteEmployee handles DELETE request to delete an employee
+// func (ec *EmployeeController) DeleteEmployee(c *gin.Context) {
+// 	id := c.Param("id")
+// 	if err := ec.employeeService.DeleteEmployee(id); err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"message": "Employee deleted successfully"})
+// }

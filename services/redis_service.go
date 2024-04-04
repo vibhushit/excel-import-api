@@ -13,6 +13,7 @@ type RedisService interface {
     CacheEmployee(employee models.Employee) error
     CacheEmployees(employees []models.Employee) error
     GetEmployeesFromCache() ([]models.Employee, error)
+    RemoveEmployeeFromCache(ctx context.Context, id string) error
 }
 
 // redisService implements RedisService
@@ -85,4 +86,13 @@ func (rs *redisService) GetEmployeesFromCache() ([]models.Employee, error) {
     }
 
     return employees, nil
+}
+
+// RemoveEmployeeFromCache removes employee data from Redis cache
+func (rs *redisService) RemoveEmployeeFromCache(ctx context.Context, id string) error {
+    // Delete employee data from Redis cache
+    if err := rs.rdb.Del(ctx, "employee:"+id).Err(); err != nil {
+        return err
+    }
+    return nil
 }

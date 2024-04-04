@@ -20,7 +20,7 @@ func main() {
 	router := gin.Default()
 
 	// Initialize MySQL database connection
-	db, err := gorm.Open("mysql", "your_mysql_user:your_mysql_password@tcp(172.19.0.3:3306)/your_database_name?charset=utf8&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "your_mysql_user:your_mysql_password@tcp(172.21.0.2:3306)/your_database_name?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		// Log error
 		utils.LogError("Failed to connect to MySQL: " + err.Error())
