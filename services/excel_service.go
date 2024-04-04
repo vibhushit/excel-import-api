@@ -40,18 +40,19 @@ func (es *excelService) ParseExcelData(filepath string) ([]models.Employee, erro
         fmt.Println(row)
     }
 
-    // Iterate over rows, skipping the header row
+// Iterate over rows, skipping the header row
     for _, row := range rows[1:] {
         employee := models.Employee{
-            FirstName:     row[0],
-            LastName:      row[1],
-            CompanyAddress: row[2],
-            City:          row[3],
-            Country:       row[4],
-            Postal:        row[5],
-            Phone:         row[6],
-            Email:         row[7],
-            Web:           row[8],
+            FirstName:    row[0],
+            LastName:     row[1],
+            CompanyName:  row[2],
+            Address:      row[3], // Add Address field
+            City:         row[4], // Adjust index accordingly if Address is added
+            Country:      row[5],
+            Postal:       row[6],
+            Phone:        row[7],
+            Email:        row[8],
+            Web:          row[9], // Adjust index accordingly if Address is added
         }
         employees = append(employees, employee)
     }

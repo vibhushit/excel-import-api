@@ -14,6 +14,8 @@ type RedisService interface {
     CacheEmployees(employees []models.Employee) error
     GetEmployeesFromCache() ([]models.Employee, error)
     RemoveEmployeeFromCache(ctx context.Context, id string) error
+
+    ClearCache(ctx context.Context) error                       
 }
 
 // redisService implements RedisService
@@ -53,21 +55,26 @@ func (rs *redisService) CacheEmployee(employee models.Employee) error {
 
 // CacheEmployees caches a slice of employees in Redis
 func (rs *redisService) CacheEmployees(employees []models.Employee) error {
-    // Serialize employees slice to JSON
-    employeesJSON, err := json.Marshal(employees)
-    if err != nil {
-        return err
-    }
+    // Iterate over each employee and cache it individually
+    ctx := context.Background()
+    for _, emp := range employees {
+        // Serialize employee struct to JSON
+        empJSON, err := json.Marshal(emp)
+        if err != nil {
+            return err
+        }
 
-    // Cache employees data in Redis
-    ctx := context.Background() // Create context
-    err = rs.rdb.Set(ctx, "employees", employeesJSON, 0).Err()
-    if err != nil {
-        return err
+        // Cache employee data in Redis with a unique key
+        key := "employee:" + strconv.Itoa(int(emp.ID))
+        err = rs.rdb.Set(ctx, key, empJSON, 0).Err()
+        if err != nil {
+            return err
+        }
     }
 
     return nil
 }
+
 
 // GetEmployeesFromCache retrieves employees data from Redis cache
 func (rs *redisService) GetEmployeesFromCache() ([]models.Employee, error) {
@@ -96,3 +103,14 @@ func (rs *redisService) RemoveEmployeeFromCache(ctx context.Context, id string) 
     }
     return nil
 }
+
+// ClearCache clears all data from the Redis cache
+func (rs *redisService) ClearCache(ctx context.Context) error {
+    // Flush all keys from the Redis cache
+    if err := rs.rdb.FlushAll(ctx).Err(); err != nil {
+        return err
+    }
+    return nil
+}
+
+

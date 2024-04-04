@@ -20,7 +20,7 @@ func main() {
 	router := gin.Default()
 
 	// Initialize MySQL database connection
-	db, err := gorm.Open("mysql", "your_mysql_user:your_mysql_password@tcp(172.21.0.2:3306)/your_database_name?charset=utf8&parseTime=True&loc=Local")
+	db, err := gorm.Open("mysql", "your_mysql_user:your_mysql_password@tcp(172.24.0.2:3306)/your_database_name?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		// Log error
 		utils.LogError("Failed to connect to MySQL: " + err.Error())
@@ -65,36 +65,35 @@ func main() {
 		v1.POST("/employees", employeeController.AddEmployee)
 		v1.PUT("/employees/:id", employeeController.UpdateEmployee)
 		v1.DELETE("/employees/:id", employeeController.DeleteEmployee)
+		v1.POST("/clear-cache", employeeController.ClearCache)  // Route for clearing cache
+		v1.POST("/update-cache-to-mysql", employeeController.UpdateCacheToRedis) // Route for updating MySQL database from cache
 	}
+
 
 	// Define the path to the Excel file
 	filepath := "Sample_Employee_data_xlsx.xlsx"
 
-    // Parse Excel data
-    employees, err := excelService.ParseExcelData(filepath)
+// Parse Excel data
+employees, err := excelService.ParseExcelData(filepath)
+if err != nil {
+    // Log error
+    utils.LogError("Failed to parse Excel data: " + err.Error())
+} else {
+    // Log successful parsing
+    utils.LogInfo("Successfully parsed Excel data")
+
+    // Check if any records already exist in the database table
+    existingEmployees, err := employeeService.GetEmployees()
     if err != nil {
-        // Log error
-        utils.LogError("Failed to parse Excel data: " + err.Error())
+        // Log error retrieving existing employees
+        utils.LogError("Failed to retrieve existing employees: " + err.Error())
+    } else if len(existingEmployees) > 0 {
+        // Records already exist in the database, log a message
+        utils.LogInfo("Records already exist in the database. Skipping adding new records.")
     } else {
-        // Log successful parsing
-        utils.LogInfo("Successfully parsed Excel data")
-
-        // Add employees to the database if they don't already exist
+        // No existing records, proceed to add employees to the database
         for _, emp := range employees {
-            existingEmployee, err := employeeService.GetEmployeeByEmail(emp.Email)
-            if err != nil {
-                // Log error checking if employee exists
-                utils.LogError("Failed to check if employee exists: " + err.Error())
-                continue // Skip this employee and proceed with the next one
-            }
-
-            if existingEmployee != nil {
-                // Employee already exists in the database, skip adding
-                utils.LogInfo("Employee already exists in the database: " + emp.FirstName + " " + emp.LastName)
-                continue // Skip this employee and proceed with the next one
-            }
-
-            // Employee does not exist in the database, add it
+            // Add employee to the database
             if err := employeeService.AddEmployee(&emp); err != nil {
                 // Log error adding employee to the database
                 utils.LogError("Failed to add employee to database: " + err.Error())
@@ -113,6 +112,9 @@ func main() {
             }
         }
     }
+}
+
+
 
 
 

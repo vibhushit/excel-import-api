@@ -1,7 +1,7 @@
 package services
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"excel-import-api/models"
 	"github.com/jinzhu/gorm"
@@ -47,6 +47,7 @@ type EmployeeService interface {
 	DeleteEmployee(id string) error
 	GetEmployeeByID(id uint) (*models.Employee, error)
 	GetEmployeeByEmail(email string) (*models.Employee, error)
+	GetEmployeeByPhoneAndEmail(phone, email string) (*models.Employee, error)
 }
 
 // employeeService implements EmployeeService
@@ -98,23 +99,28 @@ func (es *employeeService) GetEmployeeByEmail(email string) (*models.Employee, e
 	return &employee, nil
 }
 
-// AddEmployee adds a new employee to the database if it doesn't already exist
-func (es *employeeService) AddEmployee(employee *models.Employee) error {
-	// Check if an employee with the same email already exists in the database
-	existingEmployee, err := es.GetEmployeeByEmail(employee.Email)
-	if err != nil {
-		return err // Return error if unable to check for existing employee
-	}
-	if existingEmployee != nil {
-		// Employee with the same email already exists, return error or handle appropriately
-		return errors.New("employee with the same email already exists")
-	}
+// GetEmployeeByPhoneAndEmail retrieves an employee by phone and email from the database
+func (es *employeeService) GetEmployeeByPhoneAndEmail(phone, email string) (*models.Employee, error) {
+    var employee models.Employee
+    if err := es.db.Where("phone = ? AND email = ?", phone, email).First(&employee).Error; err != nil {
+        if gorm.IsRecordNotFoundError(err) {
+            fmt.Println("Employee with phone", phone, "and email", email, "not found")
+            return nil, nil // Return nil if employee not found
+        }
+        fmt.Println("Error retrieving employee with phone", phone, "and email", email, ":", err.Error())
+        return nil, err // Return error if unable to retrieve employee by phone and email
+    }
+    fmt.Println("Retrieved employee with phone", phone, "and email", email)
+    return &employee, nil
+}
 
-	// No employee with the same email exists, proceed to add the employee
-	if err := es.db.Create(employee).Error; err != nil {
-		return err // Return error if unable to add employee to the database
-	}
-	return nil
+// AddEmployee adds a new employee to the database
+func (es *employeeService) AddEmployee(employee *models.Employee) error {
+    // Proceed to add the employee to the database
+    if err := es.db.Create(employee).Error; err != nil {
+        return err // Return error if unable to add employee to the database
+    }
+    return nil
 }
 
 // UpdateEmployee updates an existing employee in the database
