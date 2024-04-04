@@ -1,7 +1,6 @@
 package services
 
 import (
-	//"errors"
 	"fmt"
 	"excel-import-api/models"
 	"github.com/jinzhu/gorm"
@@ -45,9 +44,9 @@ type EmployeeService interface {
 	AddEmployee(employee *models.Employee) error
 	UpdateEmployee(id string, employee *models.Employee) error
 	DeleteEmployee(id string) error
-	GetEmployeeByID(id uint) (*models.Employee, error)
-	GetEmployeeByEmail(email string) (*models.Employee, error)
-	GetEmployeeByPhoneAndEmail(phone, email string) (*models.Employee, error)
+	//GetEmployeeByID(id uint) (*models.Employee, error)
+	//GetEmployeeByEmail(email string) (*models.Employee, error)
+	//GetEmployeeByPhoneAndEmail(phone, email string) (*models.Employee, error)
 }
 
 // employeeService implements EmployeeService
@@ -67,51 +66,6 @@ func (es *employeeService) GetEmployees() ([]models.Employee, error) {
 		return nil, err
 	}
 	return employees, nil
-}
-
-// GetEmployeeByID retrieves an employee by ID from the database
-func (es *employeeService) GetEmployeeByID(id uint) (*models.Employee, error) {
-	var employee models.Employee
-	if err := es.db.First(&employee, id).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			fmt.Println("Employee with ID", id, "not found")
-			return nil, nil // Return nil if employee not found
-		}
-		fmt.Println("Error retrieving employee with ID", id, ":", err.Error())
-		return nil, err
-	}
-	fmt.Println("Retrieved employee with ID", id)
-	return &employee, nil
-}
-
-// GetEmployeeByEmail retrieves an employee by email from the database
-func (es *employeeService) GetEmployeeByEmail(email string) (*models.Employee, error) {
-	var employee models.Employee
-	if err := es.db.Where("email = ?", email).First(&employee).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			fmt.Println("Employee with email", email, "not found")
-			return nil, nil // Return nil if employee not found
-		}
-		fmt.Println("Error retrieving employee with email", email, ":", err.Error())
-		return nil, err // Return error if unable to retrieve employee by email
-	}
-	fmt.Println("Retrieved employee with email", email)
-	return &employee, nil
-}
-
-// GetEmployeeByPhoneAndEmail retrieves an employee by phone and email from the database
-func (es *employeeService) GetEmployeeByPhoneAndEmail(phone, email string) (*models.Employee, error) {
-    var employee models.Employee
-    if err := es.db.Where("phone = ? AND email = ?", phone, email).First(&employee).Error; err != nil {
-        if gorm.IsRecordNotFoundError(err) {
-            fmt.Println("Employee with phone", phone, "and email", email, "not found")
-            return nil, nil // Return nil if employee not found
-        }
-        fmt.Println("Error retrieving employee with phone", phone, "and email", email, ":", err.Error())
-        return nil, err // Return error if unable to retrieve employee by phone and email
-    }
-    fmt.Println("Retrieved employee with phone", phone, "and email", email)
-    return &employee, nil
 }
 
 // AddEmployee adds a new employee to the database

@@ -6,11 +6,8 @@ import (
 	"excel-import-api/services"
 	"net/http"
    "github.com/olekukonko/tablewriter"
-    //"encoding/json"
     "fmt"
-   //"strconv"
    "context"
-   //"reflect"
 )
 
 // EmployeeController handles HTTP requests related to employees
@@ -55,8 +52,8 @@ func (ec *EmployeeController) GetEmployees(c *gin.Context) {
         "ID",
         "First Name",
         "Last Name",
-        "Company Name", // Updated header for Company Name
-        "Address",      // Added header for Address
+        "Company Name", 
+        "Address",      
         "City",
         "Country",
         "Postal",
@@ -72,8 +69,8 @@ func (ec *EmployeeController) GetEmployees(c *gin.Context) {
             fmt.Sprintf("%d", emp.ID),
             emp.FirstName,
             emp.LastName,
-            emp.CompanyName, // Updated field for Company Name
-            emp.Address,     // Added field for Address
+            emp.CompanyName, 
+            emp.Address,     
             emp.City,
             emp.Country,
             emp.Postal,
