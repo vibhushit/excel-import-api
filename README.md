@@ -15,14 +15,6 @@ This project is a Go application that imports data from an Excel file, stores it
 - MySQL (Dockerized)
 - Redis (Dockerized)
 
-## Getting Started
-
-To run this project locally:
-
-1. Clone the repository.
-2. Set up Docker for MySQL and Redis.
-3. Run the Go application.
-
 ## Installation
 
 1. Clone the repository.
